@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Top 10 Bacteria Cultures</title>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <style>
+    .bar {
+      fill: steelblue;
+    }
+
+    .bar:hover {
+      fill: brown;
+    }
+
+    #chart-one-container {
+      background-color: blue;
+      border: 1px solid red;
+      width: 38vw;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    /* Styles for bar chart */
+    .bar {
+      fill: steelblue;
+    }
+
+    .bar:hover {
+      fill: brown;
+    }
+
+    /* Styles for bubble chart */
+    .bubble {
+      stroke: black;
+      stroke-width: 1px;
+      opacity: 0.8;
+    }
+
+    .bubble:hover {
+      stroke: brown;
+      stroke-width: 2px;
+    }
+
+    /* Styles for demographic info box */
+    #demographic-info {
+      background-color: #f2f2f2;
+      border: 1px solid #ddd;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+
+    #dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      margin-bottom: 2rem;
+    }
+
+    #demographic-info {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      max-width: 300px;
+      width: 100%;
+    }
+
+    #demographic-info h3 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #333;
+    }
+
+    #demographic-info p {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    #bar-chart,
+    #bubble-chart {
+      width: 100%;
+      max-width: 800px;
+      margin: 1rem;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="dashboard">
+    <div id="demographic-info">s</div>
+    <div id="bar-chart">b</div>
+    <div id="bubble-chart">u</div>
+  </div>
+
+
+  <script>
+    d3.json("samples.json").then(function (data) {
+      const samples = data.samples;
+      const userData = data.metadata
+
+
+
+
+      const dropdown = d3.select("#dashboard")
+        .append("select")
+        .on("change", function () {
+          const selectedId = d3.select(this).property("value");
+          const selectedSample = samples.find(sample => sample.id == selectedId.split(":")[1].trim());
+          updatePlots(selectedSample);
+        });
+
+
+
+      dropdown.selectAll("option")
+        .data(samples)
+        .enter()
+        .append("option")
+        .text(d => `Sample ID: ${d.id}`);
+
+      updatePlots(samples[0]);
+
+      function updatePlots(selectedSample) {
+        const selectedUser = userData.find(user => user.id == selectedSample.id);
+
+
+
+
+        d3.select("#bar-chart").selectAll("*").remove();
+
+
+        const demographicInfo = d3.select("#demographic-info")
+          .html(`
+            <h3>Demographic Info</h3>
+            <p>ID: ${selectedSample.id}</p>
+            <p>ETHNICITY: ${selectedUser.ethnicity}</p>
+            <p>GENDER: ${selectedUser.gender}</p>
+            <p>AGE: ${selectedUser.age}</p>
+            <p>LOCATION: ${selectedUser.location}</p>
+            <p>BBTYPE: ${selectedUser.bbtype}</p>
+            <p>WFREQ: ${selectedUser.wfreq}</p>
+          `);
+
+        // Update bar chart
+        const barChart = createBarChart("#bar-chart", selectedSample);
+
+        // Update bubble chart
+        const bubbleChart = createBubbleChart("#bubble-chart", selectedSample);
+      }
+
+
+
+
+
+
+
+
+
+
+
+      function createBarChart(selector, sample) {
+        // Load the data from the JSON file
+        d3.json("samples.json").then(function (data) {
+
+          // Extract the top 10 OTUs based on sample_values
+          const topOTUs = sample.otu_ids.map(function (id, i) {
+            return {
+              id: id,
+              value: sample.sample_values[i],
+              label: sample.otu_labels[i]
+            };
+          })
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10);
+
+          // Set up the dimensions and margins for the bar chart
+          const margin = { top: 20, right: 20, bottom: 30, left: 60 },
+            width = 500 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+
+          // Create the SVG container for the bar chart
+          const svg = d3.select("#bar-chart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+          // Create the x and y scales for the bar chart
+          const x = d3.scaleLinear()
+            .range([0, width])
+            .domain([0, d3.max(topOTUs, d => d.value)]);
+
+          const y = d3.scaleBand()
+            .range([height, 0])
+            .padding(0.1)
+            .domain(topOTUs.map(d => `OTU ${d.id}`));
+
+          // Create the x and y axes
+          const xAxis = d3.axisBottom(x);
+          const yAxis = d3.axisLeft(y);
+
+          // Add the x and y axes to the chart
+          svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(0, ${height})`)
+            .call(xAxis);
+
+          svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis);
+
+          // Add the bars to the chart
+          svg.selectAll(".bar")
+            .data(topOTUs)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", 0)
+            .attr("height", y.bandwidth())
+            .attr("y", d => y(`OTU ${d.id}`))
+            .attr("width", d => x(d.value))
+            .append("title")
+            .text(d => d.label);
+
+          // Add the x-axis label
+          svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", width)
+            .attr("y", height + margin.bottom - 5)
+            .text("Number of Bacteria");
+
+          // Add the chart title
+          svg.append("text")
+            .attr("x", (width / 2))
+            .attr("y", 0 - (margin.top / 2))
+            .attr("text-anchor", "middle")
+            .style("font-size", "16px")
+            .text("Top 10 Bacteria Cultures Found");
+        });
+        // Load the data from the JSON file
+
+
+
+      }
+
+      function createBubbleChart(selector, sample) {
+        d3.select("#bubble-chart").selectAll("*").remove();
+
+        // Set up the dimensions and margins for the bubble chart
+        const margin = { top: 20, right: 20, bottom: 60, left: 60 },
+          width = 500 - margin.left - margin.right,
+          height = 400 - margin.top - margin.bottom;
+
+        // Create the SVG container for the bubble chart
+        const svg = d3.select("#bubble-chart")
+          .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+        // Create the x and y scales for the bubble chart
+        const x = d3.scaleLinear()
+          .range([0, width])
+          .domain(d3.extent(sample.otu_ids));
+
+        const y = d3.scaleLinear()
+          .range([height, 0])
+          .domain(d3.extent(sample.sample_values));
+
+        // Create the x and y axes
+        const xAxis = d3.axisBottom(x);
+        const yAxis = d3.axisLeft(y);
+
+        // Add the x and y axes to the chart
+        svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", `translate(0, ${height})`)
+          .call(xAxis);
+
+        svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis);
+
+        // Add the bubbles to the chart
+        const bubbles = svg.selectAll(".bubble")
+          .data(sample.otu_ids)
+          .enter().append("circle")
+          .attr("class", "bubble")
+          .attr("cx", d => x(d))
+          .attr("cy", d => y(sample.sample_values[sample.otu_ids.indexOf(d)]))
+          .attr("r", d => Math.sqrt(sample.sample_values[sample.otu_ids.indexOf(d)] * 0.5))
+          .style("fill", d => `rgb(${d % 256}, ${(d + 100) % 256}, ${(d + 200) % 256})`)
+          .append("title")
+          .text((d, i) => sample.otu_labels[i]);
+
+        // Add the x-axis label
+        svg.append("text")
+          .attr("text-anchor", "end")
+          .attr("x", width)
+          .attr("y", height + margin.bottom - 5)
+          .text("OTU ID");
+
+        // Add the y-axis label
+        svg.append("text")
+          .attr("text-anchor", "end")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -margin.left + 20)
+          .attr("x", -margin.top)
+          .text("Number of Bacteria");
+
+        // Add the chart title
+        svg.append("text")
+          .attr("x", (width / 2))
+          .attr("y", 0 - (margin.top / 2))
+          .attr("text-anchor", "middle")
+          .style("font-size", "16px")
+          .text("Bacteria Cultures per Sample");
+      }
+
+    });
+
+
+
+
+
+
+
+  </script>
+</body>
+
+</html>
