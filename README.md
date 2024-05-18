@@ -1,32 +1,39 @@
 # belly-button-challenge
-Instructions
-Complete the following steps:
+Requirements
+Bar Chart (30 points)
+Chart initializes without error (10 points)
 
-Use the D3 library to read in samples.json from the URL https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json.
+Chart updates when a new sample is selected (5 points)
 
-Create a horizontal bar chart with a dropdown menu to display the top 10 OTUs found in that individual.
+Chart uses Top 10 sample values as values (5 points)
 
-Use sample_values as the values for the bar chart.
+Chart uses otu_ids as the labels (5 points)
 
-Use otu_ids as the labels for the bar chart.
+Chart uses otu_labels as the tooltip (5 points)
 
-Use otu_labels as the hovertext for the chart.
+Bubble Charts (40 points)
+Chart initializes without error (10 points)
 
-bar Chart
+Chart updates when a new sample is selected (5 points)
 
-Create a bubble chart that displays each sample.
+Chart uses otu_ids for the x values (5 points)
 
-Use otu_ids for the x values.
+Chart uses otu_ids for marker colors (5 points)
 
-Use sample_values for the y values.
+Chart uses sample_values for the y values (5 points)
 
-Use sample_values for the marker size.
+Chart uses sample_values for the marker size (5 points)
 
-Use otu_ids for the marker colors.
+Chart uses otu_labels for text values (5 points)
 
-Use otu_labels for the text values.
+Metadata and Deployment (30 points)
+Metadata initializes without error (10 points)
 
-Bubble Chart
+Metadata updates when a new sample is selected (10 points)
+
+App Successfully Deployed to Github Pages (10 points)
+
+
 
 Display the sample metadata, i.e., an individual's demographic information.
 
